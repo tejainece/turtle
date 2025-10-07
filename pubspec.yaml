@@ -10,8 +10,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_gpu:
+    sdk: flutter
   flutter_gpu_shaders: ^0.3.0
   cupertino_icons: ^1.0.8
+  image: ^4.5.4
 
 dev_dependencies:
   flutter_test:
