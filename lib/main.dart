@@ -33,12 +33,16 @@ class _MyHomePageState extends State<MyHomePage> {
   Surface? image;
 
   Future<void> _process() async {
+    final loaded = await LoadImageNode().process(LoadImageInput(path: 'sprites/penguin_funny_blue_water.jpg'));
+    /*setState(() {
+      image = loaded.image;
+    });*/
     DrawRectangleInput input = DrawRectangleInput(
-      surface: null,
+      surface: loaded.image,
       x: 0,
       y: 0,
-      width: 100,
-      height: 100,
+      width: 50,
+      height: 50,
       color: 'black',
     );
     DrawRectangleNode node = DrawRectangleNode();
