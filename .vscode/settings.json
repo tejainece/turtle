@@ -1,0 +1,86 @@
+
+{
+    "workbench.colorTheme": "Quiet Light",
+    "editor.minimap.enabled": false,
+    "makefile.configureOnOpen": true,
+    "workbench.colorCustomizations": {
+        "[Quiet Light]": {},
+    },
+    "dart.debugExternalPackageLibraries": false,
+    "dart.debugSdkLibraries": false,
+    "diffEditor.codeLens": true,
+    "editor.fontSize": 12,
+    "editor.wordWrap": "on",
+    "editor.suggest.insertMode": "insert",
+    "references.preferredLocation": "view",
+    "explorer.compactFolders": false,
+    "debug.toolBarLocation": "docked",
+    "window.zoomLevel": 1.5,
+    "editor.semanticTokenColorCustomizations": {
+        "rules": {
+            //"keyword:dart": {"foreground": "#01a", "fontStyle": "bold"},
+            // "class:dart": "#25f",
+            // "method.constructor:dart": "#25f",
+            // "enum:dart": "#25f",
+            // "enumMember": "#25f",
+            // "string:dart": "#292",
+            // "method.instance:dart": "#c935c9",
+            // "comment:dart": "#888",
+            /*"parameter.label:dart": {
+                // "fontStyle": "bold",
+                "color": "#000000",
+            },*/
+        },
+    },
+    "editor.tokenColorCustomizations": {
+        "textMateRules": [
+            /*{
+                "scope": "variable.parameter",
+                "settings": {
+                    "foreground": "#000000"
+                },
+            },*/
+            {
+                // "scope": "meta.embedded.expression.dart",
+                // "settings": {
+                //     "fontStyle": "bold"
+                // }
+            },
+        ],
+    },
+    "[dart]": {
+        "editor.defaultFormatter": "Dart-Code.dart-code",
+        "editor.formatOnSave": true,
+        "editor.suggest.insertMode": "insert",
+        "editor.tabSize": 2,
+    },
+    "dart.mcpServer": true,
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+    "files.exclude": {
+        //".vscode": true,
+        ".gemini": true,
+        "_scrap": true,
+        ".idea": true,
+        "*/.idea": true,
+        "art": true,
+        "*/test": true,
+        "art_inspiration": true,
+        "*/.dart_tool": true,
+        "*/.gitignore": true,
+        "*/analysis_options.yaml": true,
+        "*/CHANGELOG.md": true,
+        "*/pubspec.lock":true,
+        "*/devtools_options.yaml":true,
+        "*/README.md": true,
+        "*/android": true,
+        "*/ios": false,
+        "*/linux": true,
+        "*/macos": false,
+        "*/windows": true,
+        "*/web": true,
+        "*/.flutter-plugins-dependencies": true,
+        "*/.metadata": true,
+        "*/build": false,
+    }
+}

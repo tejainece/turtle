@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:turtle/src/node.dart';
+import 'package:turtle/src/editor/editor.dart';
+import 'package:turtle/src/processor/processor.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,22 +34,24 @@ class _MyHomePageState extends State<MyHomePage> {
   Surface? image;
 
   Future<void> _process() async {
-    final loaded = await LoadImageNode().process(LoadImageInput(path: 'sprites/penguin_funny_blue_water.jpg'));
+    final loaded = await LoadImageNode().process(
+      LoadImageInput(paths: ['sprites/penguin_funny_blue_water.jpg']),
+    );
     /*setState(() {
       image = loaded.image;
     });*/
-    DrawRectangleInput input = DrawRectangleInput(
-      surface: loaded.image,
+    RasteredRectangleInput input = RasteredRectangleInput(
+      surfaces: loaded.surfaces,
       x: 0,
       y: 0,
       width: 50,
       height: 50,
-      color: 'black',
+      color: Colors.black,
     );
-    DrawRectangleNode node = DrawRectangleNode();
+    RasteredRectangleNode node = RasteredRectangleNode();
     final output = await node.process(input);
     setState(() {
-      image = output.image;
+      image = output.surfaces.first;
     });
   }
 
@@ -59,13 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Wrap(
-          children: <Widget>[
-            if (image != null) RawImage(image: image!.image, scale: 1),
-          ],
-        ),
-      ),
+      body: Editor(),
       floatingActionButton: FloatingActionButton(
         onPressed: _process,
         tooltip: 'Process',
@@ -74,3 +71,13 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+
+/*
+Center(
+        child: Wrap(
+          children: <Widget>[
+            if (image != null) RawImage(image: image!.image, scale: 1),
+          ],
+        ),
+      )
+*/

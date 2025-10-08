@@ -3,12 +3,25 @@ import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as im;
 
-export 'draw_rectangle.dart';
-export 'load_image.dart';
+export 'raster/draw_rectangle.dart';
+export 'raster/load_image.dart';
 
-abstract class Node<O, I> {
+abstract class Processor<
+  O extends OutProcessSocket,
+  I extends InProcessSocket
+> {
+  String get name;
+
   Future<O> process(I input);
+
+  I makeInput(List args);
 }
+
+abstract class OutProcessSocket {
+  List get asArgs;
+}
+
+abstract class InProcessSocket {}
 
 class Surface {
   final ui.Image image;
