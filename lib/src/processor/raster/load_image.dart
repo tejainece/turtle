@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:turtle/src/processor/processor.dart';
 
-class LoadImageInput implements InProcessSocket {
+class LoadImageInput implements ProcessorInput {
   final List<String> paths;
 
   LoadImageInput({required this.paths});
@@ -11,15 +11,29 @@ class LoadImageInput implements InProcessSocket {
   factory LoadImageInput.fromArgs(List args) {
     return LoadImageInput(paths: args[0]);
   }
+
+  @override
+  List<ProcessorSocket> get sockets => mySockets;
+
+  static const List<ProcessorSocket> mySockets = [
+    ProcessorSocket(label: 'Paths', type: DataType.string, id: 'paths'),
+  ];
 }
 
-class LoadImageOutput implements OutProcessSocket {
+class LoadImageOutput implements ProcessorOutput {
   final List<Surface> surfaces;
 
   LoadImageOutput({required this.surfaces});
 
   @override
   late final List<dynamic> asArgs = [surfaces];
+
+  @override
+  List<ProcessorSocket> get sockets => mySockets;
+
+  static const List<ProcessorSocket> mySockets = [
+    ProcessorSocket(label: 'Surfaces', type: DataType.surface, id: 'surfaces'),
+  ];
 }
 
 class LoadImageNode implements Processor<LoadImageOutput, LoadImageInput> {
@@ -38,5 +52,11 @@ class LoadImageNode implements Processor<LoadImageOutput, LoadImageInput> {
   LoadImageInput makeInput(List<dynamic> args) => LoadImageInput.fromArgs(args);
 
   @override
-  late final String name = 'LoadImage';
+  late final String label = 'Load image';
+
+  @override
+  List<ProcessorSocket> get inputSocket => LoadImageInput.mySockets;
+
+  @override
+  List<ProcessorSocket> get outputSocket => LoadImageOutput.mySockets;
 }

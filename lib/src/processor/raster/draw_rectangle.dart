@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:turtle/src/processor/processor.dart';
 
-class RasteredRectangleInput implements InProcessSocket {
+class DrawRectangleInput implements ProcessorInput {
   final List<Surface> surfaces;
   final double x;
   final double y;
@@ -13,7 +13,7 @@ class RasteredRectangleInput implements InProcessSocket {
   // TODO fill properties
   // TODO stroke properties
 
-  RasteredRectangleInput({
+  DrawRectangleInput({
     required this.surfaces,
     required this.x,
     required this.y,
@@ -22,8 +22,8 @@ class RasteredRectangleInput implements InProcessSocket {
     required this.color,
   });
 
-  factory RasteredRectangleInput.fromArgs(List args) {
-    return RasteredRectangleInput(
+  factory DrawRectangleInput.fromArgs(List args) {
+    return DrawRectangleInput(
       surfaces: args[0],
       x: args[1],
       y: args[2],
@@ -32,21 +32,40 @@ class RasteredRectangleInput implements InProcessSocket {
       color: args[5],
     );
   }
+
+  @override
+  late final List<ProcessorSocket> sockets = sockets;
+
+  static final List<ProcessorSocket> mySockets = [
+    ProcessorSocket(label: 'Surfaces', type: DataType.surface, id: 'surfaces'),
+    ProcessorSocket(label: 'Left', type: DataType.number, id: 'x'),
+    ProcessorSocket(label: 'Top', type: DataType.number, id: 'y'),
+    ProcessorSocket(label: 'Width', type: DataType.number, id: 'width'),
+    ProcessorSocket(label: 'Height', type: DataType.number, id: 'height'),
+    ProcessorSocket(label: 'Color', type: DataType.color, id: 'color'),
+  ];
 }
 
-class RasteredRectangleOutput implements OutProcessSocket {
+class DrawRectangleOutput implements ProcessorOutput {
   final List<Surface> surfaces;
 
-  RasteredRectangleOutput({required this.surfaces});
+  DrawRectangleOutput({required this.surfaces});
 
   @override
   List get asArgs => [surfaces];
+
+  @override
+  late final List<ProcessorSocket> sockets = mySockets;
+
+  static final List<ProcessorSocket> mySockets = [
+    ProcessorSocket(label: 'Surfaces', type: DataType.surface, id: 'surfaces'),
+  ];
 }
 
-class RasteredRectangleNode
-    implements Processor<RasteredRectangleOutput, RasteredRectangleInput> {
+class DrawRectangleNode
+    implements Processor<DrawRectangleOutput, DrawRectangleInput> {
   @override
-  Future<RasteredRectangleOutput> process(RasteredRectangleInput input) async {
+  Future<DrawRectangleOutput> process(DrawRectangleInput input) async {
     final outSurfaces = <Surface>[];
 
     if (input.surfaces.isNotEmpty) {
@@ -56,11 +75,11 @@ class RasteredRectangleNode
     } else {
       outSurfaces.add(await _processOneSurface(input, null));
     }
-    return RasteredRectangleOutput(surfaces: outSurfaces);
+    return DrawRectangleOutput(surfaces: outSurfaces);
   }
 
   Future<Surface> _processOneSurface(
-    RasteredRectangleInput input,
+    DrawRectangleInput input,
     Surface? inputSurface,
   ) async {
     final recorder = ui.PictureRecorder();
@@ -97,9 +116,15 @@ class RasteredRectangleNode
   }
 
   @override
-  RasteredRectangleInput makeInput(List<dynamic> args) =>
-      RasteredRectangleInput.fromArgs(args);
+  DrawRectangleInput makeInput(List<dynamic> args) =>
+      DrawRectangleInput.fromArgs(args);
 
   @override
-  final String name = 'RasteredRectangle';
+  final String label = 'Draw rectangle';
+
+  @override
+  List<ProcessorSocket> get inputSocket => DrawRectangleInput.mySockets;
+
+  @override
+  List<ProcessorSocket> get outputSocket => DrawRectangleOutput.mySockets;
 }

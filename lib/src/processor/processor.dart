@@ -6,22 +6,48 @@ import 'package:image/image.dart' as im;
 export 'raster/draw_rectangle.dart';
 export 'raster/load_image.dart';
 
-abstract class Processor<
-  O extends OutProcessSocket,
-  I extends InProcessSocket
-> {
-  String get name;
+abstract class Processor<O extends ProcessorOutput, I extends ProcessorInput> {
+  String get label;
 
   Future<O> process(I input);
 
   I makeInput(List args);
+
+  List<ProcessorSocket> get inputSocket;
+  List<ProcessorSocket> get outputSocket;
 }
 
-abstract class OutProcessSocket {
+abstract class ProcessorOutput {
   List get asArgs;
+
+  List<ProcessorSocket> get sockets;
 }
 
-abstract class InProcessSocket {}
+abstract class ProcessorInput {
+  List<ProcessorSocket> get sockets;
+}
+
+// TODO how to represent list
+sealed class DataType {
+  static const String number = 'number';
+  static const String integer = 'integer';
+  static const String string = 'string';
+  static const String boolean = 'boolean';
+  static const String surface = 'surface';
+  static const String color = 'color';
+}
+
+class ProcessorSocket {
+  final String id;
+  final String label;
+  final String type;
+
+  const ProcessorSocket({
+    required this.label,
+    required this.type,
+    required this.id,
+  });
+}
 
 class Surface {
   final ui.Image image;

@@ -40,7 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
     /*setState(() {
       image = loaded.image;
     });*/
-    RasteredRectangleInput input = RasteredRectangleInput(
+    DrawRectangleInput input = DrawRectangleInput(
       surfaces: loaded.surfaces,
       x: 0,
       y: 0,
@@ -48,7 +48,7 @@ class _MyHomePageState extends State<MyHomePage> {
       height: 50,
       color: Colors.black,
     );
-    RasteredRectangleNode node = RasteredRectangleNode();
+    DrawRectangleNode node = DrawRectangleNode();
     final output = await node.process(input);
     setState(() {
       image = output.surfaces.first;

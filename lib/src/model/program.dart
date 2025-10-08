@@ -21,7 +21,7 @@ class Node {
     'offsetY': offset.dy,
     'inputs': inputs.map((e) => e.toJson()).toList(),
     'outputs': outputs.map((e) => e.toJson()).toList(),
-    'processor': processor.name,
+    'processor': processor.label,
   };
 
   static Node fromJson(Map json, Map<String, Processor> processors) => Node(
