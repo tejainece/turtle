@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/painting.dart';
 import 'package:turtle/src/editor/editor.dart';
+import 'package:turtle/src/editor/socket.dart';
 import 'package:turtle/src/model/model.dart';
 import 'package:turtle/src/processor/processor.dart';
 
@@ -34,19 +37,64 @@ class Program {
     }
   }
 
-  void connect(String socketA, String socketB, {List<Offset>? shape}) {
-    // TODO verify that socketA exists
-    // TODO verify that socketB exists
+  String? canConnect(String socketAId, String socketBId) {
+    String nodeIdA = socketAId.split('.').first;
+    String socketAKey = socketAId.split('.').skip(1).join('.');
+    String nodeIdB = socketBId.split('.').first;
+    String socketBKey = socketBId.split('.').skip(1).join('.');
 
+    if (nodeIdA == nodeIdB) return "Cannot connect a node to itself";
+
+    Node? nodeA, nodeB;
+    ProcessorSocket? socketA, socketB;
+    for (final node in nodes) {
+      if (node.id != nodeIdA) continue;
+      nodeA = node;
+      socketA = node.findSocket(socketAKey);
+      break;
+    }
+    for (final node in nodes) {
+      if (node.id != nodeIdB) continue;
+      nodeB = node;
+      socketB = node.findSocket(socketBKey);
+      break;
+    }
+
+    if (nodeA == null || socketA == null) {
+      return 'Socket $socketAId is not found in program';
+    }
+    if (nodeB == null || socketB == null) {
+      return 'Socket $socketBId is not found in program';
+    }
+
+    if (socketA.isInput && socketB.isInput) {
+      return "Cannot connect two input sockets";
+    }
+    if (!socketA.isInput && !socketB.isInput) {
+      return "Cannot connect two output sockets";
+    }
+    if (socketA.dataType != socketB.dataType) {
+      return "Cannot connect sockets of different data types";
+    }
+
+    return null;
+  }
+
+  String? connect(String socketAId, String socketBId, {List<Offset>? shape}) {
     // Do not add, if already present
     for (final connection in connections) {
-      if (connection.socketA == socketA && connection.socketB == socketB) {
-        return;
+      if (connection.socketA == socketAId && connection.socketB == socketBId) {
+        return null;
       }
     }
+
+    final err = canConnect(socketAId, socketBId);
+    if (err != null) return err;
     connections.add(
-      Connection(socketA: socketA, socketB: socketB, shape: shape ?? []),
+      Connection(socketA: socketAId, socketB: socketBId, shape: shape ?? []),
     );
+
+    return null;
   }
 
   DataType? getConnectionDataType(String socketId) {
@@ -77,7 +125,7 @@ class Program {
             Offset(
               SocketWidget.size / 2,
               25 +
-                  5 +
+                  SocketWidget.spacingV +
                   SocketWidget.size / 2 +
                   input.$1 * (SocketWidget.size + 5),
             )
@@ -95,12 +143,12 @@ class Program {
         return node.offset +
             Offset(
               SocketWidget.size +
-                  5 +
+                  SocketWidget.spacingH +
                   node.size.width +
-                  5 +
+                  SocketWidget.spacingH +
                   SocketWidget.size / 2,
               25 +
-                  5 +
+                  SocketWidget.spacingV +
                   SocketWidget.size / 2 +
                   output.$1 * (SocketWidget.size + 5),
             )

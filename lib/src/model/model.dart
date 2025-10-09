@@ -19,6 +19,18 @@ class Node {
   List<ProcessorSocket> get inputSockets => processor.inputSockets;
   List<ProcessorSocket> get outputSockets => processor.outputSockets;
 
+  ProcessorSocket? findSocket(String key) {
+    for (final socket in inputSockets) {
+      if (socket.key != key) continue;
+      return socket;
+    }
+    for (final socket in outputSockets) {
+      if (socket.key != key) continue;
+      return socket;
+    }
+    return null;
+  }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'offsetX': offset.dx,

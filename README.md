@@ -17,12 +17,12 @@ Procedural art and animation library for Dart
 
 # Roadmap: Editor
 
-+ Reshape connection
-+ Mid connection sockets using passthough node
 + Detect cycles
 + Hover scroll
-+ Make connection
 + Add nodes
++ Alt + Dragging a node should duplicate it
++ Reshape connection
++ Mid connection sockets using passthough node
 
 # Properties editor
 
