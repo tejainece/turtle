@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/painting.dart';
 import 'package:turtle/src/editor/socket.dart';
 import 'package:turtle/src/model/model.dart';
@@ -178,18 +176,4 @@ class Program {
         nodes: Node.fromJsonList(json['nodes'], processors),
         connections: Connection.fromJsonList(json['connections']),
       );
-}
-
-class Executer {
-  final Program program;
-  Executer({required this.program});
-
-  void execute() {
-    final outputs = {
-      // TODO
-    };
-    for (final node in program.nodes) {
-      // TODO
-    }
-  }
 }

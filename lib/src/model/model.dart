@@ -14,6 +14,8 @@ class Node {
   final _controller = StreamController<Node>.broadcast();
   late final Stream<Node> stream = _controller.stream;
 
+  final _properties = {};
+
   Node({
     required this.id,
     required Offset offset,
@@ -57,6 +59,13 @@ class Node {
       return socket;
     }
     return null;
+  }
+
+  void setProperty(String socketId, dynamic value) {
+    // TODO check that socket is input
+    // TODO check that socket data type matches
+    _properties[socketId] = value;
+    _controller.add(this);
   }
 
   Future<void> dispose() async {
