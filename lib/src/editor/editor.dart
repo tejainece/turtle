@@ -31,15 +31,24 @@ class _ProgramEditorState extends State<ProgramEditor> {
           setState(() {
             _viewport.center += event.delta;
           });
+        } else if (_connectionDrag != null) {
+          setState(() {
+            _connectionDrag!.current = event.localPosition;
+          });
         }
       },
       onPointerDown: (event) {
         if (_nodeDrag != null && _nodeDrag!.event.pointer == event.pointer) {
           return;
+        } else if (_connectionDrag != null &&
+            _connectionDrag!.event.pointer == event.pointer) {
+          return;
         }
-        _nodeDrag = null;
-        _panOffset = event.localPosition;
-        // TODO
+        setState(() {
+          _nodeDrag = null;
+          _connectionDrag = null;
+          _panOffset = event.localPosition;
+        });
       },
       child: Container(
         decoration: BoxDecoration(color: const Color.fromARGB(255, 47, 47, 47)),
@@ -52,20 +61,30 @@ class _ProgramEditorState extends State<ProgramEditor> {
                 key: ValueKey(connection),
                 viewport: _viewport,
               ),
+            if (_connectionDrag != null)
+              ConnectionDragWidget(
+                program: program,
+                socket: _connectionDrag!.socketId,
+                viewport: _viewport,
+                current: Offset(0, 0),
+              ),
             for (final node in program.nodes)
               NodeWidget(
                 node,
                 key: ValueKey(node.id),
-                onDragStart: (drag) {
+                onNodeDragStart: (drag) {
                   _nodeDrag = drag;
                 },
                 viewport: _viewport,
+                onConnectionDrag: _onConnectionDrag,
               ),
           ],
         ),
       ),
     );
   }
+
+  void _onConnectionDrag(ConnectionDrag drag) {}
 
   final Viewport _viewport = Viewport(size: Size.zero, center: Offset.zero);
 
@@ -101,7 +120,12 @@ class NodeDrag {
 class ConnectionDrag {
   final String socketId;
   final PointerEvent event;
-  ConnectionDrag({required this.socketId, required this.event});
+  Offset current;
+  ConnectionDrag({
+    required this.socketId,
+    required this.event,
+    required this.current,
+  });
 }
 
 class NodeWidget extends StatefulWidget {
@@ -109,13 +133,16 @@ class NodeWidget extends StatefulWidget {
 
   final Viewport viewport;
 
-  final void Function(NodeDrag drag) onDragStart;
+  final void Function(NodeDrag drag) onNodeDragStart;
+
+  final void Function(ConnectionDrag drag) onConnectionDrag;
 
   const NodeWidget(
     this.node, {
     required this.viewport,
     super.key,
-    required this.onDragStart,
+    required this.onNodeDragStart,
+    required this.onConnectionDrag,
   });
 
   @override
@@ -127,7 +154,7 @@ class _NodeWidgetState extends State<NodeWidget> {
     return Listener(
       onPointerDown: (event) {
         // print('${event.localPosition} ${event.localDelta} ${event.position}');
-        widget.onDragStart(
+        widget.onNodeDragStart(
           NodeDrag(
             node: node,
             start: node.offset,
@@ -208,6 +235,7 @@ class _NodeWidgetState extends State<NodeWidget> {
                   socket: input.$2,
                   node: node,
                   key: ValueKey(input.$2.key),
+                  onConnectionDrag: widget.onConnectionDrag,
                 ),
             ],
           ),
@@ -224,6 +252,7 @@ class _NodeWidgetState extends State<NodeWidget> {
                   socket: output.$2,
                   node: node,
                   key: ValueKey(output.$2.key),
+                  onConnectionDrag: widget.onConnectionDrag,
                 ),
             ],
           ),
@@ -241,12 +270,14 @@ class SocketWidget extends StatefulWidget {
   final Node node;
   final int index;
   final ProcessorSocket socket;
+  final void Function(ConnectionDrag drag) onConnectionDrag;
 
   const SocketWidget({
     required this.index,
     required this.socket,
     required this.node,
     super.key,
+    required this.onConnectionDrag,
   });
 
   @override
@@ -260,35 +291,48 @@ class SocketWidget extends StatefulWidget {
 class _SocketWidgetState extends State<SocketWidget> {
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      opaque: true,
-      hitTestBehavior: HitTestBehavior.opaque,
-      onEnter: (event) {
-        setState(() {
-          _hovering = true;
-        });
-      },
-      onExit: (event) {
-        setState(() {
-          _hovering = false;
-        });
-      },
-      child: Container(
-        width: SocketWidget.size,
-        height: SocketWidget.size,
-        decoration: BoxDecoration(
-          color: _hovering ? socket.dataType.col : null,
-          border: Border.all(
-            color: socket.dataType.col,
-            width: SocketWidget.borderSize,
+    return Listener(
+      onPointerDown: (event) {
+        widget.onConnectionDrag(
+          ConnectionDrag(
+            socketId: '${node.id}.${socket.key}',
+            event: event,
+            current: event.localPosition,
           ),
-          borderRadius: BorderRadius.circular(SocketWidget.size / 2),
+        );
+      },
+      child: MouseRegion(
+        opaque: true,
+        hitTestBehavior: HitTestBehavior.opaque,
+        onEnter: (event) {
+          setState(() {
+            _hovering = true;
+          });
+        },
+        onExit: (event) {
+          setState(() {
+            _hovering = false;
+          });
+        },
+        child: Container(
+          width: SocketWidget.size,
+          height: SocketWidget.size,
+          decoration: BoxDecoration(
+            color: _hovering ? socket.dataType.col : null,
+            border: Border.all(
+              color: socket.dataType.col,
+              width: SocketWidget.borderSize,
+            ),
+            borderRadius: BorderRadius.circular(SocketWidget.size / 2),
+          ),
         ),
       ),
     );
   }
 
   bool _hovering = false;
+
+  Node get node => widget.node;
 
   ProcessorSocket get socket => widget.socket;
 }
@@ -321,6 +365,34 @@ class ConnectionWidget extends StatelessWidget {
               viewport.center +
               program.getConnectionOffset(connection.socketB)!,
           color: program.getConnectionDataType(connection.socketA)!.col,
+        ),
+      ),
+    );
+  }
+}
+
+class ConnectionDragWidget extends StatelessWidget {
+  final Program program;
+  final String socket;
+  final Offset current;
+  final Viewport viewport;
+
+  const ConnectionDragWidget({
+    required this.program,
+    required this.socket,
+    required this.viewport,
+    required this.current,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: CustomPaint(
+        painter: ConnectionPainter(
+          start: viewport.center + program.getConnectionOffset(socket)!,
+          end: current,
+          color: program.getConnectionDataType(socket)!.col,
         ),
       ),
     );

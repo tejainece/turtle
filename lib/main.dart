@@ -70,8 +70,14 @@ class _MyHomePageState extends State<MyHomePage> {
               processor: LoadImageNode(),
             ),
             Node(
-              id: 'Rectangle',
+              id: 'Rectangle1',
               offset: Offset(490, 170),
+              size: Size(300, 300),
+              processor: DrawRectangleNode(),
+            ),
+            Node(
+              id: 'Rectangle2',
+              offset: Offset(910, 170),
               size: Size(300, 300),
               processor: DrawRectangleNode(),
             ),
@@ -79,7 +85,7 @@ class _MyHomePageState extends State<MyHomePage> {
           connections: [
             Connection(
               socketA: 'LoadImage1.output.surfaces',
-              socketB: 'Rectangle.input.surfaces',
+              socketB: 'Rectangle1.input.surfaces',
               shape: [],
             ),
           ],
