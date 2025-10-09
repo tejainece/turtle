@@ -14,15 +14,17 @@ class Node {
   final _controller = StreamController<Node>.broadcast();
   late final Stream<Node> stream = _controller.stream;
 
-  final _properties = {};
+  final Map<String, dynamic> _properties;
 
   Node({
     required this.id,
     required Offset offset,
     required Size size,
     required this.processor,
+    Map<String, dynamic>? properties,
   }) : _offset = offset,
-       _size = size;
+       _size = size,
+       _properties = Map.from(properties ?? {});
 
   Offset get offset => _offset;
   set offset(Offset value) {
@@ -66,6 +68,11 @@ class Node {
     // TODO check that socket data type matches
     _properties[socketId] = value;
     _controller.add(this);
+  }
+
+  dynamic getProperty(String socketId) {
+    // TODO check that socket is input
+    return _properties[socketId];
   }
 
   Future<void> dispose() async {

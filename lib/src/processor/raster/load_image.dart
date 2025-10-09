@@ -39,6 +39,12 @@ class LoadImageOutput implements ProcessorOutput {
   @override
   List<ProcessorSocket> get sockets => mySockets;
 
+  @override
+  dynamic valueBySocketId(String socketId) {
+    if (socketId == 'surfaces') return surfaces;
+    throw Exception('Socket $socketId not found');
+  }
+
   static const List<ProcessorSocket> mySockets = [
     ProcessorSocket(
       label: 'Surfaces',

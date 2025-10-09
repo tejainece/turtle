@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:turtle/src/editor/editor.dart';
 import 'package:turtle/src/editor/socket.dart';
 import 'package:turtle/src/model/model.dart';
 import 'package:turtle/src/model/program.dart';
+import 'package:turtle/src/processor/processor.dart';
 
 class NodeWidget extends StatefulWidget {
   final Program program;
@@ -94,11 +97,9 @@ class _NodeWidgetState extends State<NodeWidget> {
               ),
             ),
             Expanded(
-              child: Stack(
-                children: [
-                  // TODO preview
-                ],
-              ),
+              child: node.preview != null
+                  ? PreviewWidget(node.preview)
+                  : Container(),
             ),
           ],
         ),
@@ -179,7 +180,53 @@ class _NodeWidgetState extends State<NodeWidget> {
     );
   }
 
+  final _subs = <StreamSubscription>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _subs.add(
+      node.stream.listen((event) {
+        setState(() {});
+      }),
+    );
+    _subs.add(
+      viewport.stream.listen((event) {
+        setState(() {});
+      }),
+    );
+  }
+
+  @override
+  void dispose() {
+    while (_subs.isNotEmpty) {
+      _subs.removeLast().cancel();
+    }
+    super.dispose();
+  }
+
   Node get node => widget.node;
 
   ProgramViewport get viewport => widget.viewport;
+}
+
+class PreviewWidget extends StatelessWidget {
+  final dynamic preview;
+
+  const PreviewWidget(this.preview, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    if (this.preview == null) return Container();
+    dynamic preview = this.preview;
+    if (preview is List) {
+      if (preview.isEmpty) return Container();
+      preview = preview.first;
+    }
+    if (preview is Surface) {
+      return RawImage(image: preview.image);
+    }
+    // TODO other previews
+    return Container();
+  }
 }

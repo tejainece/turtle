@@ -48,7 +48,6 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
       if (path != null) {
         Offset position = event.localPosition;
         final metric = path!.computeMetrics().first;
-        print('${position} ${metric.getTangentForOffset(0)!.position}');
         for (double i = 0; i < metric.length; i++) {
           final tangent = metric.getTangentForOffset(i.toDouble());
           if (tangent == null) continue;

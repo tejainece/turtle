@@ -27,6 +27,12 @@ class NumberOutput implements ProcessorOutput {
   @override
   List<ProcessorSocket> get sockets => mySockets;
 
+  @override
+  dynamic valueBySocketId(String socketId) {
+    if (socketId == 'output') return output;
+    throw Exception('Socket $socketId not found');
+  }
+
   static final List<ProcessorSocket> mySockets = [
     ProcessorSocket(
       label: 'Output',

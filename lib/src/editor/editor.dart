@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:turtle/src/editor/node.dart';
+import 'package:turtle/src/model/executer.dart';
 import 'package:turtle/src/model/model.dart';
 import 'package:turtle/src/model/program.dart';
 
@@ -20,76 +22,14 @@ class ProgramEditor extends StatefulWidget {
 class _ProgramEditorState extends State<ProgramEditor> {
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      onPointerDown: (event) {
-        _pointerController.add(event);
-        if (_nodeDrag != null && _nodeDrag!.event.pointer == event.pointer) {
-          return;
-        } else if (_connectionDrag != null &&
-            _connectionDrag!.event.pointer == event.pointer) {
-          return;
-        }
-        setState(() {
-          _nodeDrag = null;
-          _connectionDrag = null;
-          _panOffset = null;
-        });
-        if (event.buttons == kMiddleMouseButton) {
-          setState(() {
-            _nodeDrag = null;
-            _connectionDrag = null;
-            _panOffset = event.localPosition;
-          });
-        }
-      },
-      onPointerUp: (event) {
-        _pointerController.add(event);
-        _nodeDrag = null;
-        _panOffset = null;
-      },
-      onPointerHover: (event) {
-        _pointerController.add(event);
-        if (_connectionDrag != null) {
-          setState(() {
-            _connectionDrag!.current = event.localPosition.scale(
-              _viewport.scale,
-              _viewport.scale,
-            );
-          });
-        }
-      },
-      onPointerMove: (event) {
-        _pointerController.add(event);
-        if (_nodeDrag != null) {
-          setState(() {
-            _nodeDrag!.node.offset += event.delta;
-          });
-        } else if (_panOffset != null) {
-          setState(() {
-            _viewport.center += event.delta;
-          });
-        } else if (_connectionDrag != null) {
-          setState(() {
-            _connectionDrag!.current = event
-                .localPosition /*.scale(
-              _viewport.scale,
-              _viewport.scale,
-            )*/;
-          });
-        }
-      },
-      onPointerSignal: (event) {
-        _pointerController.add(event);
-        if (event is PointerScrollEvent) {
-          setState(() {
-            _viewport.scale += event.scrollDelta.dy.isNegative ? -0.05 : 0.05;
-          });
-        }
-      },
-      child: Container(
-        decoration: BoxDecoration(color: const Color.fromARGB(255, 47, 47, 47)),
-        child: Transform.scale(
-          scale: _viewport.scale,
+    return _registerMouseEvents(
+      context: context,
+      child: _registerKeyEvents(
+        context: context,
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 47, 47, 47),
+          ),
           child: Stack(
             children: [
               for (final connection in program.connections)
@@ -127,6 +67,106 @@ class _ProgramEditorState extends State<ProgramEditor> {
     );
   }
 
+  Widget _registerMouseEvents({
+    required BuildContext context,
+    required Widget child,
+  }) {
+    return Listener(
+      onPointerDown: (event) {
+        _pointerController.add(event);
+        if (_nodeDrag != null && _nodeDrag!.event.pointer == event.pointer) {
+          return;
+        } else if (_connectionDrag != null &&
+            _connectionDrag!.event.pointer == event.pointer) {
+          return;
+        }
+        setState(() {
+          _nodeDrag = null;
+          _connectionDrag = null;
+          _panOffset = null;
+        });
+        if (event.buttons == kMiddleMouseButton) {
+          setState(() {
+            _nodeDrag = null;
+            _connectionDrag = null;
+            _panOffset = event.localPosition;
+          });
+        }
+      },
+      onPointerUp: (event) {
+        _pointerController.add(event);
+        _nodeDrag = null;
+        _panOffset = null;
+      },
+      onPointerHover: (event) {
+        _pointerController.add(event);
+        if (_connectionDrag != null) {
+          setState(() {
+            _connectionDrag!.current = event.localPosition;
+          });
+        }
+      },
+      onPointerMove: (event) {
+        _pointerController.add(event);
+        if (_nodeDrag != null) {
+          setState(() {
+            _nodeDrag!.node.offset += event.delta;
+          });
+        } else if (_panOffset != null) {
+          setState(() {
+            _viewport.center += event.delta;
+          });
+        } else if (_connectionDrag != null) {
+          setState(() {
+            _connectionDrag!.current = event.localPosition;
+          });
+        }
+      },
+      onPointerSignal: (event) {
+        _pointerController.add(event);
+        if (event is PointerScrollEvent) {
+          setState(() {
+            _viewport.scale += event.scrollDelta.dy.isNegative ? -0.05 : 0.05;
+          });
+        }
+      },
+      child: child,
+    );
+  }
+
+  Widget _registerKeyEvents({
+    required BuildContext context,
+    required Widget child,
+  }) {
+    return KeyboardListener(
+      focusNode: _focus,
+      autofocus: true,
+      onKeyEvent: (event) async {
+        if (event is KeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.delete) {
+            if (_selectedNode != null) {
+              program.removeNode(_selectedNode!);
+              _selectedNode = null;
+              setState(() {});
+            }
+          } else if (event.logicalKey == LogicalKeyboardKey.f5) {
+            final executer = Executer(program: program, frame: 0);
+            try {
+              final watch = Stopwatch()..start();
+              await executer.execute();
+              print('Executed in ${watch.elapsedMilliseconds}ms');
+            } catch (e) {
+              print(e);
+            }
+          }
+        }
+      },
+      child: child,
+    );
+  }
+
+  final _focus = FocusNode();
+
   void _onConnectionDrag(ConnectionDrag drag) {
     if (_connectionDrag == null) {
       _connectionDrag = drag;
@@ -161,6 +201,7 @@ class _ProgramEditorState extends State<ProgramEditor> {
   @override
   void dispose() {
     _pointerController.close();
+    _focus.dispose();
     super.dispose();
   }
 }

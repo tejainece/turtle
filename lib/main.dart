@@ -68,19 +68,29 @@ class _MyHomePageState extends State<MyHomePage> {
               offset: Offset(70, 170),
               size: Size(300, 300),
               processor: LoadImageNode(),
+              properties: {
+                'paths': ['sprites/penguin_funny_blue_water.jpg'],
+              },
             ),
             Node(
               id: 'Rectangle1',
               offset: Offset(490, 170),
               size: Size(300, 300),
               processor: DrawRectangleNode(),
+              properties: {
+                'x': 0,
+                'y': 0,
+                'width': 50,
+                'height': 50,
+                'color': Colors.black,
+              },
             ),
-            Node(
+            /*Node(
               id: 'Rectangle2',
               offset: Offset(910, 170),
               size: Size(300, 300),
               processor: DrawRectangleNode(),
-            ),
+            ),*/
           ],
           connections: [
             Connection(
@@ -91,21 +101,6 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _process,
-        tooltip: 'Process',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }
-
-/*
-Center(
-        child: Wrap(
-          children: <Widget>[
-            if (image != null) RawImage(image: image!.image, scale: 1),
-          ],
-        ),
-      )
-*/

@@ -25,10 +25,10 @@ class DrawRectangleInput implements ProcessorInput {
   factory DrawRectangleInput.fromArgs(List args) {
     return DrawRectangleInput(
       surfaces: args[0],
-      x: args[1],
-      y: args[2],
-      width: args[3],
-      height: args[4],
+      x: (args[1] as num).toDouble(),
+      y: (args[2] as num).toDouble(),
+      width: (args[3] as num).toDouble(),
+      height: (args[4] as num).toDouble(),
       color: args[5],
     );
   }
@@ -89,6 +89,11 @@ class DrawRectangleOutput implements ProcessorOutput {
 
   @override
   List<Surface> get preview => surfaces;
+
+  dynamic valueBySocketId(String socketId) {
+    if (socketId == 'surfaces') return surfaces;
+    throw Exception('Socket $socketId not found');
+  }
 
   static final List<ProcessorSocket> mySockets = [
     ProcessorSocket(

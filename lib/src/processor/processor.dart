@@ -24,6 +24,8 @@ abstract class ProcessorOutput {
   List<ProcessorSocket> get sockets;
 
   dynamic get preview;
+
+  dynamic valueBySocketId(String socketId);
 }
 
 abstract class ProcessorInput {

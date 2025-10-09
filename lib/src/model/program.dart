@@ -37,33 +37,22 @@ class Program {
 
   String? canConnect(String socketAId, String socketBId) {
     String nodeIdA = socketAId.split('.').first;
-    String socketAKey = socketAId.split('.').skip(1).join('.');
     String nodeIdB = socketBId.split('.').first;
-    String socketBKey = socketBId.split('.').skip(1).join('.');
 
     if (nodeIdA == nodeIdB) return "Cannot connect a node to itself";
 
-    Node? nodeA, nodeB;
-    ProcessorSocket? socketA, socketB;
-    for (final node in nodes) {
-      if (node.id != nodeIdA) continue;
-      nodeA = node;
-      socketA = node.findSocket(socketAKey);
-      break;
-    }
-    for (final node in nodes) {
-      if (node.id != nodeIdB) continue;
-      nodeB = node;
-      socketB = node.findSocket(socketBKey);
-      break;
-    }
+    Node? nodeA = findNodeById(nodeIdA);
+    if (nodeA == null) return 'Socket $socketAId is not found in program';
+    Node? nodeB = findNodeById(nodeIdB);
+    if (nodeB == null) return 'Socket $socketBId is not found in program';
 
-    if (nodeA == null || socketA == null) {
-      return 'Socket $socketAId is not found in program';
-    }
-    if (nodeB == null || socketB == null) {
-      return 'Socket $socketBId is not found in program';
-    }
+    String socketAKey = socketAId.split('.').last;
+    String socketBKey = socketBId.split('.').last;
+
+    ProcessorSocket? socketA = nodeA.findSocket(socketAKey);
+    if (socketA == null) return 'Socket $socketAId is not found in program';
+    ProcessorSocket? socketB = nodeB.findSocket(socketBKey);
+    if (socketB == null) return 'Socket $socketBId is not found in program';
 
     if (socketA.isInput && socketB.isInput) {
       return "Cannot connect two input sockets";
@@ -95,54 +84,62 @@ class Program {
     return null;
   }
 
+  Node? findNodeById(String id) {
+    for (final node in nodes) {
+      if (node.id != id) continue;
+      return node;
+    }
+    return null;
+  }
+
   DataType? getSocketDataType(String socketId) {
     final nodeId = socketId.split('.').first;
+    final node = findNodeById(nodeId);
+    if (node == null) return null;
     final socId = socketId.split('.').skip(1).join('.');
-    for (final node in nodes) {
-      if (node.id != nodeId) continue;
-      for (final input in node.inputSockets) {
-        if (input.key != socId) continue;
-        return input.dataType;
-      }
-      for (final output in node.outputSockets) {
-        if (output.key != socId) continue;
-        return output.dataType;
-      }
+
+    for (final input in node.inputSockets) {
+      if (input.key != socId) continue;
+      return input.dataType;
+    }
+    for (final output in node.outputSockets) {
+      if (output.key != socId) continue;
+      return output.dataType;
     }
     return null;
   }
 
   Offset? getConnectionOffset(String socketId) {
     final nodeId = socketId.split('.').first;
+    final node = findNodeById(nodeId);
+    if (node == null) return null;
     final socId = socketId.split('.').skip(1).join('.');
-    for (final node in nodes) {
-      if (node.id != nodeId) continue;
-      for (final input in node.inputSockets.indexed) {
-        if (input.$2.key != socId) continue;
-        return node.offset +
-            Offset(
-              SocketWidget.size / 2,
-              25 +
-                  SocketWidget.spacingV +
-                  SocketWidget.size / 2 +
-                  input.$1 * (SocketWidget.size + 5),
-            );
-      }
-      for (final output in node.outputSockets.indexed) {
-        if (output.$2.key != socId) continue;
-        return node.offset +
-            Offset(
-              SocketWidget.size +
-                  SocketWidget.spacingH +
-                  node.size.width +
-                  SocketWidget.spacingH +
-                  SocketWidget.size / 2,
-              25 +
-                  SocketWidget.spacingV +
-                  SocketWidget.size / 2 +
-                  output.$1 * (SocketWidget.size + 5),
-            );
-      }
+
+    for (final input in node.inputSockets.indexed) {
+      if (input.$2.key != socId) continue;
+      return node.offset +
+          Offset(
+            SocketWidget.size / 2,
+            25 +
+                SocketWidget.spacingV +
+                SocketWidget.size / 2 +
+                input.$1 * (SocketWidget.size + 5),
+          );
+    }
+    for (final output in node.outputSockets.indexed) {
+      if (output.$2.key != socId) continue;
+      return node.offset +
+          Offset(
+            SocketWidget.size +
+                SocketWidget.spacingH +
+                node.size.width +
+                SocketWidget.spacingH +
+                SocketWidget.size / 2,
+            25 +
+                SocketWidget.spacingV +
+                SocketWidget.size / 2 +
+                output.$1 * (SocketWidget.size + 5),
+          );
     }
     return null;
   }
@@ -151,19 +148,33 @@ class Program {
     String nodeIdA = socketAId.split('.').first;
     String nodeIdB = socketBId.split('.').first;
 
-    Node? nodeA, nodeB;
-    for (final node in nodes) {
-      if (node.id != nodeIdA) continue;
-      nodeA = node;
-      break;
-    }
+    Node? nodeA = findNodeById(nodeIdA);
     if (nodeA == null) return null;
-    for (final node in nodes) {
-      if (node.id != nodeIdB) continue;
-      nodeB = node;
-      return (nodeA, nodeB);
+    Node? nodeB = findNodeById(nodeIdB);
+    if (nodeB == null) return null;
+    return (nodeA, nodeB);
+  }
+
+  Connection? getConnectionBySocket(String socketId) {
+    for (final connection in connections) {
+      if (connection.socketA == socketId || connection.socketB == socketId) {
+        return connection;
+      }
     }
     return null;
+  }
+
+  (Connection, String, Node)? getNodeConnectedToSocket(String socketId) {
+    final connection = getConnectionBySocket(socketId);
+    if (connection == null) return null;
+    String mySocketId = connection.socketA;
+    if (mySocketId == socketId) {
+      mySocketId = connection.socketB;
+    }
+    String nodeId = mySocketId.split('.').first;
+    final node = findNodeById(nodeId);
+    if (node == null) return null;
+    return (connection, mySocketId, node);
   }
 
   Map<String, dynamic> toJson() => {
