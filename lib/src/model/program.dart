@@ -1,7 +1,6 @@
-import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/painting.dart';
-import 'package:turtle/src/editor/editor.dart';
 import 'package:turtle/src/editor/socket.dart';
 import 'package:turtle/src/model/model.dart';
 import 'package:turtle/src/processor/processor.dart';
@@ -9,6 +8,7 @@ import 'package:turtle/src/processor/processor.dart';
 class Program {
   final List<Node> nodes;
   final List<Connection> connections;
+
   Program({required this.nodes, required this.connections});
 
   void removeNode(String id) {
@@ -97,7 +97,7 @@ class Program {
     return null;
   }
 
-  DataType? getConnectionDataType(String socketId) {
+  DataType? getSocketDataType(String socketId) {
     final nodeId = socketId.split('.').first;
     final socId = socketId.split('.').skip(1).join('.');
     for (final node in nodes) {
@@ -128,15 +128,7 @@ class Program {
                   SocketWidget.spacingV +
                   SocketWidget.size / 2 +
                   input.$1 * (SocketWidget.size + 5),
-            )
-        /*Offset(
-              -SocketWidget.size / 2 - 5,
-              25 +
-                  SocketWidget.size / 2 +
-                  input.$1 * (SocketWidget.size + 5) +
-                  SocketWidget.size / 2,
-            )*/
-        ;
+            );
       }
       for (final output in node.outputSockets.indexed) {
         if (output.$2.key != socId) continue;
@@ -151,16 +143,27 @@ class Program {
                   SocketWidget.spacingV +
                   SocketWidget.size / 2 +
                   output.$1 * (SocketWidget.size + 5),
-            )
-        /*Offset(
-              node.size.width + SocketWidget.size / 2 + 5,
-              25 +
-                  SocketWidget.size / 2 +
-                  output.$1 * (SocketWidget.size + 5) +
-                  SocketWidget.size / 2,
-            )*/
-        ;
+            );
       }
+    }
+    return null;
+  }
+
+  (Node, Node)? getConnectionNodes(String socketAId, String socketBId) {
+    String nodeIdA = socketAId.split('.').first;
+    String nodeIdB = socketBId.split('.').first;
+
+    Node? nodeA, nodeB;
+    for (final node in nodes) {
+      if (node.id != nodeIdA) continue;
+      nodeA = node;
+      break;
+    }
+    if (nodeA == null) return null;
+    for (final node in nodes) {
+      if (node.id != nodeIdB) continue;
+      nodeB = node;
+      return (nodeA, nodeB);
     }
     return null;
   }
@@ -182,6 +185,11 @@ class Executer {
   Executer({required this.program});
 
   void execute() {
-    // TODO
+    final outputs = {
+      // TODO
+    };
+    for (final node in program.nodes) {
+      // TODO
+    }
   }
 }

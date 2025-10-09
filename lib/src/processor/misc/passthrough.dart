@@ -46,7 +46,8 @@ class PassthroughOutput implements ProcessorOutput {
   ];
 }
 
-class Passthrough implements Processor<PassthroughOutput, PassthroughInput> {
+class PassthroughNode
+    implements Processor<PassthroughOutput, PassthroughInput> {
   @override
   Future<PassthroughOutput> process(PassthroughInput input) async =>
       PassthroughOutput(output: input.input);

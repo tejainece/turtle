@@ -17,6 +17,7 @@ dependencies:
   image: ^4.5.4
   observable_ish: ^6.0.6 
   defer_pointer: ^0.0.2
+  flutter_color: ^2.1.0
 
 dev_dependencies:
   flutter_test:

@@ -1,20 +1,48 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:turtle/src/processor/processor.dart';
 
 class Node {
-  Offset offset;
-  Size size;
+  Offset _offset;
+  Size _size;
   final String id;
   final Processor processor;
 
-  dynamic preview;
+  dynamic _preview;
+
+  final _controller = StreamController<Node>.broadcast();
+  late final Stream<Node> stream = _controller.stream;
 
   Node({
     required this.id,
-    required this.offset,
-    required this.size,
+    required Offset offset,
+    required Size size,
     required this.processor,
-  });
+  }) : _offset = offset,
+       _size = size;
+
+  Offset get offset => _offset;
+  set offset(Offset value) {
+    if (value == _offset) return;
+    _offset = value;
+    _controller.add(this);
+  }
+
+  Size get size => _size;
+
+  set size(Size value) {
+    if (value == _size) return;
+    _size = value;
+    _controller.add(this);
+  }
+
+  dynamic get preview => _preview;
+  set preview(dynamic value) {
+    if (value == _preview) return;
+    _preview = value;
+    _controller.add(this);
+  }
 
   List<ProcessorSocket> get inputSockets => processor.inputSockets;
   List<ProcessorSocket> get outputSockets => processor.outputSockets;
@@ -29,6 +57,10 @@ class Node {
       return socket;
     }
     return null;
+  }
+
+  Future<void> dispose() async {
+    await _controller.close();
   }
 
   Map<String, dynamic> toJson() => {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:turtle/src/editor/node.dart';
@@ -20,15 +22,18 @@ class _ProgramEditorState extends State<ProgramEditor> {
   Widget build(BuildContext context) {
     return Listener(
       onPointerDown: (event) {
+        _pointerController.add(event);
         if (_nodeDrag != null && _nodeDrag!.event.pointer == event.pointer) {
           return;
         } else if (_connectionDrag != null &&
             _connectionDrag!.event.pointer == event.pointer) {
           return;
         }
-        _nodeDrag = null;
-        _connectionDrag = null;
-        _panOffset = null;
+        setState(() {
+          _nodeDrag = null;
+          _connectionDrag = null;
+          _panOffset = null;
+        });
         if (event.buttons == kMiddleMouseButton) {
           setState(() {
             _nodeDrag = null;
@@ -38,17 +43,23 @@ class _ProgramEditorState extends State<ProgramEditor> {
         }
       },
       onPointerUp: (event) {
+        _pointerController.add(event);
         _nodeDrag = null;
         _panOffset = null;
       },
       onPointerHover: (event) {
+        _pointerController.add(event);
         if (_connectionDrag != null) {
           setState(() {
-            _connectionDrag!.current = event.localPosition;
+            _connectionDrag!.current = event.localPosition.scale(
+              _viewport.scale,
+              _viewport.scale,
+            );
           });
         }
       },
       onPointerMove: (event) {
+        _pointerController.add(event);
         if (_nodeDrag != null) {
           setState(() {
             _nodeDrag!.node.offset += event.delta;
@@ -59,11 +70,16 @@ class _ProgramEditorState extends State<ProgramEditor> {
           });
         } else if (_connectionDrag != null) {
           setState(() {
-            _connectionDrag!.current = event.localPosition;
+            _connectionDrag!.current = event
+                .localPosition /*.scale(
+              _viewport.scale,
+              _viewport.scale,
+            )*/;
           });
         }
       },
       onPointerSignal: (event) {
+        _pointerController.add(event);
         if (event is PointerScrollEvent) {
           setState(() {
             _viewport.scale += event.scrollDelta.dy.isNegative ? -0.05 : 0.05;
@@ -82,6 +98,7 @@ class _ProgramEditorState extends State<ProgramEditor> {
                   program: program,
                   key: ValueKey(connection),
                   viewport: _viewport,
+                  onPointer: _pointerStream,
                 ),
               if (_connectionDrag != null)
                 ConnectionDragWidget(
@@ -101,6 +118,7 @@ class _ProgramEditorState extends State<ProgramEditor> {
                   viewport: _viewport,
                   connectionDrag: _connectionDrag,
                   onConnectionDrag: _onConnectionDrag,
+                  onPointer: _pointerStream,
                 ),
             ],
           ),
@@ -121,6 +139,9 @@ class _ProgramEditorState extends State<ProgramEditor> {
     setState(() {});
   }
 
+  final _pointerController = StreamController<PointerEvent>.broadcast();
+  late final _pointerStream = _pointerController.stream;
+
   final ProgramViewport _viewport = ProgramViewport(
     size: Size.zero,
     center: Offset.zero,
@@ -139,6 +160,7 @@ class _ProgramEditorState extends State<ProgramEditor> {
 
   @override
   void dispose() {
+    _pointerController.close();
     super.dispose();
   }
 }
@@ -170,21 +192,49 @@ class ConnectionDrag {
 }
 
 class ProgramViewport {
-  Size size;
-  Offset center;
+  Size _size;
+  Offset _center;
   double _scale;
+
+  final _controller = StreamController<ProgramViewport>.broadcast();
+  late final Stream<ProgramViewport> stream = _controller.stream;
+
   ProgramViewport({
-    required this.size,
-    required this.center,
+    required Size size,
+    required Offset center,
     required double scale,
-  }) : _scale = scale;
+  }) : _size = size,
+       _center = center,
+       _scale = scale;
+
+  Size get size => _size;
+
+  set size(Size value) {
+    if (value == _size) return;
+    _size = value;
+    _controller.add(this);
+  }
+
+  Offset get center => _center;
+
+  set center(Offset value) {
+    if (value == _center) return;
+    _center = value;
+    _controller.add(this);
+  }
 
   double get scale => _scale;
 
   set scale(double value) {
-    _scale = value;
-    if (_scale < 0.2) {
-      scale = 0.2;
+    if (value < 0.2) {
+      value = 0.2;
     }
+    if (value == _scale) return;
+    _scale = value;
+    _controller.add(this);
+  }
+
+  Future<void> dispose() async {
+    await _controller.close();
   }
 }

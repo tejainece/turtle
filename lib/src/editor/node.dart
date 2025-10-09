@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:turtle/src/editor/editor.dart';
 import 'package:turtle/src/editor/socket.dart';
@@ -17,6 +18,8 @@ class NodeWidget extends StatefulWidget {
 
   final void Function(ConnectionDrag drag) onConnectionDrag;
 
+  final Stream<PointerEvent> onPointer;
+
   const NodeWidget({
     required this.program,
     required this.node,
@@ -25,6 +28,7 @@ class NodeWidget extends StatefulWidget {
     required this.onNodeDragStart,
     required this.connectionDrag,
     required this.onConnectionDrag,
+    required this.onPointer,
   });
 
   @override
@@ -35,15 +39,17 @@ class _NodeWidgetState extends State<NodeWidget> {
   Widget _buildContent(BuildContext context) {
     return Listener(
       onPointerDown: (event) {
-        widget.onNodeDragStart(
-          NodeDrag(
-            node: node,
-            start: node.offset,
-            offset: event.localPosition,
-            startTime: DateTime.now(),
-            event: event,
-          ),
-        );
+        if (event.buttons == kPrimaryMouseButton) {
+          widget.onNodeDragStart(
+            NodeDrag(
+              node: node,
+              start: node.offset,
+              offset: event.localPosition,
+              startTime: DateTime.now(),
+              event: event,
+            ),
+          );
+        }
       },
       child: Container(
         width: node.size.width,
@@ -72,8 +78,8 @@ class _NodeWidgetState extends State<NodeWidget> {
               decoration: BoxDecoration(
                 color: const Color.fromARGB(255, 0, 46, 107),
                 borderRadius: /*BorderRadius.circular(10)*/ BorderRadius.only(
-                  topLeft: Radius.circular(10),
-                  topRight: Radius.circular(10),
+                  topLeft: Radius.circular(8),
+                  topRight: Radius.circular(8),
                 ),
               ),
               child: Text(
@@ -87,10 +93,13 @@ class _NodeWidgetState extends State<NodeWidget> {
                 ),
               ),
             ),
-            Expanded(child: Stack(children: [
-
+            Expanded(
+              child: Stack(
+                children: [
+                  // TODO preview
                 ],
-              )),
+              ),
+            ),
           ],
         ),
       ),
@@ -134,6 +143,7 @@ class _NodeWidgetState extends State<NodeWidget> {
                       key: ValueKey(input.$2.key),
                       connectionDrag: widget.connectionDrag,
                       onConnectionDrag: widget.onConnectionDrag,
+                      onPointer: widget.onPointer,
                     ),
                 ],
               ),
@@ -158,6 +168,7 @@ class _NodeWidgetState extends State<NodeWidget> {
                       key: ValueKey(output.$2.key),
                       connectionDrag: widget.connectionDrag,
                       onConnectionDrag: widget.onConnectionDrag,
+                      onPointer: widget.onPointer,
                     ),
                 ],
               ),

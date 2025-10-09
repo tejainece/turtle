@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:turtle/src/editor/editor.dart';
 import 'package:turtle/src/model/model.dart';
@@ -11,6 +14,7 @@ class SocketWidget extends StatefulWidget {
   final ProcessorSocket socket;
   final ConnectionDrag? connectionDrag;
   final void Function(ConnectionDrag drag) onConnectionDrag;
+  final Stream<PointerEvent> onPointer;
 
   const SocketWidget({
     required this.program,
@@ -20,6 +24,7 @@ class SocketWidget extends StatefulWidget {
     super.key,
     required this.connectionDrag,
     required this.onConnectionDrag,
+    required this.onPointer,
   });
 
   @override
@@ -46,20 +51,24 @@ class _SocketWidgetState extends State<SocketWidget> {
           Positioned(
             left: 0,
             top: 0,
-            child: Container(
-              width: SocketWidget.size,
-              height: SocketWidget.size,
-              decoration: BoxDecoration(
-                color: _hovering != null
-                    ? (_hovering!.message != null
-                          ? Colors.red
-                          : socket.dataType.col)
-                    : null,
-                border: Border.all(
-                  color: socket.dataType.col,
-                  width: SocketWidget.borderSize,
+            child: Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: _onPointerEvent,
+              child: Container(
+                width: SocketWidget.size,
+                height: SocketWidget.size,
+                decoration: BoxDecoration(
+                  color: _hovering != null
+                      ? (_hovering!.message != null
+                            ? Colors.red
+                            : socket.dataType.col)
+                      : null,
+                  border: Border.all(
+                    color: socket.dataType.col,
+                    width: SocketWidget.borderSize,
+                  ),
+                  borderRadius: BorderRadius.circular(SocketWidget.size / 2),
                 ),
-                borderRadius: BorderRadius.circular(SocketWidget.size / 2),
               ),
             ),
           ),
@@ -84,38 +93,27 @@ class _SocketWidgetState extends State<SocketWidget> {
     if (_hovering != null && _hovering!.message != null) {
       content = Tooltip(message: _hovering!.message!, child: content);
     }
-    return Listener(
-      onPointerDown: (event) {
-        widget.onConnectionDrag(
-          ConnectionDrag(
-            socketId: '${node.id}.${socket.key}',
-            event: event,
-            current: event.localPosition,
-          ),
-        );
+    return MouseRegion(
+      opaque: false,
+      hitTestBehavior: HitTestBehavior.translucent,
+      onEnter: (event) {
+        setState(() {
+          String? message;
+          if (connectionDrag != null) {
+            message = program.canConnect(
+              connectionDrag!.socketId,
+              '${node.id}.${socket.key}',
+            );
+          }
+          _hovering = _SocketHoverData(message: message);
+        });
       },
-      child: MouseRegion(
-        opaque: true,
-        hitTestBehavior: HitTestBehavior.opaque,
-        onEnter: (event) {
-          setState(() {
-            String? message;
-            if (connectionDrag != null) {
-              message = program.canConnect(
-                connectionDrag!.socketId,
-                '${node.id}.${socket.key}',
-              );
-            }
-            _hovering = _SocketHoverData(message: message);
-          });
-        },
-        onExit: (event) {
-          setState(() {
-            _hovering = null;
-          });
-        },
-        child: content,
-      ),
+      onExit: (event) {
+        setState(() {
+          _hovering = null;
+        });
+      },
+      child: content,
     );
   }
 
@@ -153,6 +151,20 @@ class _SocketWidgetState extends State<SocketWidget> {
         ],
       ),
     );
+  }
+
+  void _onPointerEvent(PointerEvent event) {
+    if (event is PointerDownEvent) {
+      if (event.buttons == kPrimaryMouseButton) {
+        widget.onConnectionDrag(
+          ConnectionDrag(
+            socketId: '${node.id}.${socket.key}',
+            event: event,
+            current: event.localPosition,
+          ),
+        );
+      }
+    }
   }
 
   _SocketHoverData? _hovering;
