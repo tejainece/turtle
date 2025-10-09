@@ -16,7 +16,12 @@ class LoadImageInput implements ProcessorInput {
   List<ProcessorSocket> get sockets => mySockets;
 
   static const List<ProcessorSocket> mySockets = [
-    ProcessorSocket(label: 'Paths', type: DataType.string, id: 'paths'),
+    ProcessorSocket(
+      label: 'Paths',
+      dataType: DataType.string,
+      id: 'paths',
+      isInput: true,
+    ),
   ];
 }
 
@@ -29,10 +34,18 @@ class LoadImageOutput implements ProcessorOutput {
   late final List<dynamic> asArgs = [surfaces];
 
   @override
+  List<Surface> get preview => surfaces;
+
+  @override
   List<ProcessorSocket> get sockets => mySockets;
 
   static const List<ProcessorSocket> mySockets = [
-    ProcessorSocket(label: 'Surfaces', type: DataType.surface, id: 'surfaces'),
+    ProcessorSocket(
+      label: 'Surfaces',
+      dataType: DataType.surface,
+      id: 'surfaces',
+      isInput: false,
+    ),
   ];
 }
 
@@ -55,8 +68,8 @@ class LoadImageNode implements Processor<LoadImageOutput, LoadImageInput> {
   late final String label = 'Load image';
 
   @override
-  List<ProcessorSocket> get inputSocket => LoadImageInput.mySockets;
+  List<ProcessorSocket> get inputSockets => LoadImageInput.mySockets;
 
   @override
-  List<ProcessorSocket> get outputSocket => LoadImageOutput.mySockets;
+  List<ProcessorSocket> get outputSockets => LoadImageOutput.mySockets;
 }

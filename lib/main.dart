@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:turtle/src/editor/editor.dart';
+import 'package:turtle/src/model/model.dart';
+import 'package:turtle/src/model/program.dart';
 import 'package:turtle/src/processor/processor.dart';
 
 void main() {
@@ -58,11 +60,31 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+      body: ProgramEditor(
+        program: Program(
+          nodes: [
+            Node(
+              id: 'LoadImage1',
+              offset: Offset(70, 170),
+              size: Size(300, 300),
+              processor: LoadImageNode(),
+            ),
+            Node(
+              id: 'Rectangle',
+              offset: Offset(490, 170),
+              size: Size(300, 300),
+              processor: DrawRectangleNode(),
+            ),
+          ],
+          connections: [
+            Connection(
+              socketA: 'LoadImage1.output.surfaces',
+              socketB: 'Rectangle.input.surfaces',
+              shape: [],
+            ),
+          ],
+        ),
       ),
-      body: Editor(),
       floatingActionButton: FloatingActionButton(
         onPressed: _process,
         tooltip: 'Process',

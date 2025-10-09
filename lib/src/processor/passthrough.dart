@@ -13,7 +13,12 @@ class PassthroughInput implements ProcessorInput {
   late final List<ProcessorSocket> sockets = mySockets;
 
   static final List<ProcessorSocket> mySockets = [
-    ProcessorSocket(label: 'Input', type: DataType.number, id: 'input'),
+    ProcessorSocket(
+      label: 'Input',
+      dataType: DataType.number,
+      id: 'input',
+      isInput: true,
+    ),
   ];
 }
 
@@ -26,10 +31,18 @@ class PassthroughOutput implements ProcessorOutput {
   List<dynamic> get asArgs => [output];
 
   @override
+  Null get preview => null;
+
+  @override
   List<ProcessorSocket> get sockets => mySockets;
 
   static final List<ProcessorSocket> mySockets = [
-    ProcessorSocket(label: 'Output', type: DataType.number, id: 'output'),
+    ProcessorSocket(
+      label: 'Output',
+      dataType: DataType.number,
+      id: 'output',
+      isInput: false,
+    ),
   ];
 }
 
@@ -43,10 +56,10 @@ class Passthrough implements Processor<PassthroughOutput, PassthroughInput> {
       PassthroughInput.fromArgs(args);
 
   @override
-  List<ProcessorSocket> get inputSocket => PassthroughInput.mySockets;
+  List<ProcessorSocket> get inputSockets => PassthroughInput.mySockets;
 
   @override
-  List<ProcessorSocket> get outputSocket => PassthroughOutput.mySockets;
+  List<ProcessorSocket> get outputSockets => PassthroughOutput.mySockets;
 
   @override
   final String label = 'Passthrough';

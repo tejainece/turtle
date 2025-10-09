@@ -20,6 +20,9 @@ Procedural art and animation library for Dart
 + Reshape connection
 + Mid connection sockets using passthough node
 + Detect cycles
++ Hover scroll
++ Make connection
++ Add nodes
 
 # Properties editor
 

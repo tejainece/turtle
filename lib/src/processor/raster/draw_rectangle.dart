@@ -37,12 +37,42 @@ class DrawRectangleInput implements ProcessorInput {
   late final List<ProcessorSocket> sockets = sockets;
 
   static final List<ProcessorSocket> mySockets = [
-    ProcessorSocket(label: 'Surfaces', type: DataType.surface, id: 'surfaces'),
-    ProcessorSocket(label: 'Left', type: DataType.number, id: 'x'),
-    ProcessorSocket(label: 'Top', type: DataType.number, id: 'y'),
-    ProcessorSocket(label: 'Width', type: DataType.number, id: 'width'),
-    ProcessorSocket(label: 'Height', type: DataType.number, id: 'height'),
-    ProcessorSocket(label: 'Color', type: DataType.color, id: 'color'),
+    ProcessorSocket(
+      label: 'Surfaces',
+      dataType: DataType.surface,
+      id: 'surfaces',
+      isInput: true,
+    ),
+    ProcessorSocket(
+      label: 'Left',
+      dataType: DataType.number,
+      id: 'x',
+      isInput: true,
+    ),
+    ProcessorSocket(
+      label: 'Top',
+      dataType: DataType.number,
+      id: 'y',
+      isInput: true,
+    ),
+    ProcessorSocket(
+      label: 'Width',
+      dataType: DataType.number,
+      id: 'width',
+      isInput: true,
+    ),
+    ProcessorSocket(
+      label: 'Height',
+      dataType: DataType.number,
+      id: 'height',
+      isInput: true,
+    ),
+    ProcessorSocket(
+      label: 'Color',
+      dataType: DataType.color,
+      id: 'color',
+      isInput: true,
+    ),
   ];
 }
 
@@ -57,8 +87,16 @@ class DrawRectangleOutput implements ProcessorOutput {
   @override
   late final List<ProcessorSocket> sockets = mySockets;
 
+  @override
+  List<Surface> get preview => surfaces;
+
   static final List<ProcessorSocket> mySockets = [
-    ProcessorSocket(label: 'Surfaces', type: DataType.surface, id: 'surfaces'),
+    ProcessorSocket(
+      label: 'Surfaces',
+      dataType: DataType.surface,
+      id: 'surfaces',
+      isInput: false,
+    ),
   ];
 }
 
@@ -123,8 +161,8 @@ class DrawRectangleNode
   final String label = 'Draw rectangle';
 
   @override
-  List<ProcessorSocket> get inputSocket => DrawRectangleInput.mySockets;
+  List<ProcessorSocket> get inputSockets => DrawRectangleInput.mySockets;
 
   @override
-  List<ProcessorSocket> get outputSocket => DrawRectangleOutput.mySockets;
+  List<ProcessorSocket> get outputSockets => DrawRectangleOutput.mySockets;
 }
