@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:turtle/src/app/app.dart';
 import 'package:turtle/src/editor/editor.dart';
 import 'package:turtle/src/model/model.dart';
 import 'package:turtle/src/model/program.dart';
@@ -60,45 +61,60 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ProgramEditor(
-        program: Program(
-          nodes: [
-            Node(
-              id: 'LoadImage1',
-              offset: Offset(70, 170),
-              size: Size(300, 300),
-              processor: LoadImageNode(),
-              properties: {
-                'paths': ['sprites/penguin_funny_blue_water.jpg'],
-              },
-            ),
-            Node(
-              id: 'Rectangle1',
-              offset: Offset(490, 170),
-              size: Size(300, 300),
-              processor: DrawRectangleNode(),
-              properties: {
-                'x': 0,
-                'y': 0,
-                'width': 50,
-                'height': 50,
-                'color': Colors.black,
-              },
-            ),
-            /*Node(
-              id: 'Rectangle2',
-              offset: Offset(910, 170),
-              size: Size(300, 300),
-              processor: DrawRectangleNode(),
-            ),*/
-          ],
-          connections: [
-            Connection(
-              socketA: 'LoadImage1.output.surfaces',
-              socketB: 'Rectangle1.input.surfaces',
-              shape: [],
-            ),
-          ],
+      body: ThemeInjector(
+        theme: MyTheme.dark,
+        child: App(
+          program: Program(
+            nodes: [
+              Node(
+                id: 'LoadImage1',
+                offset: Offset(70, 170),
+                size: Size(300, 300),
+                processor: LoadImageNode(),
+                properties: {
+                  'paths': ['sprites/penguin_funny_blue_water.jpg'],
+                },
+              ),
+              Node(
+                id: 'Rectangle1',
+                offset: Offset(490, 170),
+                size: Size(300, 300),
+                processor: DrawRectangleNode(),
+                properties: {
+                  'x': 0,
+                  'y': 0,
+                  'width': 50,
+                  'height': 50,
+                  'color': Colors.black,
+                },
+              ),
+              Node(
+                id: 'Rectangle2',
+                offset: Offset(910, 170),
+                size: Size(300, 300),
+                processor: DrawRectangleNode(),
+                properties: {
+                  'x': 50,
+                  'y': 50,
+                  'width': 50,
+                  'height': 50,
+                  'color': Colors.red,
+                },
+              ),
+            ],
+            connections: [
+              Connection(
+                socketA: 'LoadImage1.output.surfaces',
+                socketB: 'Rectangle1.input.surfaces',
+                shape: [],
+              ),
+              Connection(
+                socketA: 'Rectangle1.output.surfaces',
+                socketB: 'Rectangle2.input.surfaces',
+                shape: [],
+              ),
+            ],
+          ),
         ),
       ),
     );

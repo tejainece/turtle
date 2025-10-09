@@ -23,6 +23,7 @@ Procedural art and animation library for Dart
 + Alt + Dragging a node should duplicate it
 + Reshape connection
 + Mid connection sockets using passthough node
++ Reshape connection
 
 # Properties editor
 

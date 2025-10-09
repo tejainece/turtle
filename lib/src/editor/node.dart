@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:turtle/src/editor/editor.dart';
 import 'package:turtle/src/editor/socket.dart';
 import 'package:turtle/src/model/model.dart';
@@ -23,6 +24,10 @@ class NodeWidget extends StatefulWidget {
 
   final Stream<PointerEvent> onPointer;
 
+  final Set<Node> selectedNodes;
+
+  final void Function(Node onSelected, bool shift) onSelect;
+
   const NodeWidget({
     required this.program,
     required this.node,
@@ -32,6 +37,8 @@ class NodeWidget extends StatefulWidget {
     required this.connectionDrag,
     required this.onConnectionDrag,
     required this.onPointer,
+    required this.selectedNodes,
+    required this.onSelect,
   });
 
   @override
@@ -43,6 +50,7 @@ class _NodeWidgetState extends State<NodeWidget> {
     return Listener(
       onPointerDown: (event) {
         if (event.buttons == kPrimaryMouseButton) {
+          widget.onSelect(node, HardwareKeyboard.instance.isShiftPressed);
           widget.onNodeDragStart(
             NodeDrag(
               node: node,
@@ -61,7 +69,9 @@ class _NodeWidgetState extends State<NodeWidget> {
           color: const Color.fromARGB(255, 0, 27, 45),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: const Color.fromARGB(255, 0, 48, 111),
+            color: selectedNodes.contains(node)
+                ? Colors.green
+                : const Color.fromARGB(255, 3, 38, 83),
             width: 2,
           ),
           boxShadow: [
@@ -132,7 +142,7 @@ class _NodeWidgetState extends State<NodeWidget> {
               left: 0,
               top: 0,
               child: Column(
-                spacing: SocketWidget.spacingH,
+                spacing: SocketWidget.spacingV,
                 children: [
                   SizedBox(height: 25),
                   for (final input in node.inputSockets.indexed)
@@ -157,7 +167,7 @@ class _NodeWidgetState extends State<NodeWidget> {
                   SocketWidget.spacingH,
               top: 0,
               child: Column(
-                spacing: SocketWidget.spacingH,
+                spacing: SocketWidget.spacingV,
                 children: [
                   SizedBox(height: 25),
                   for (final output in node.outputSockets.indexed)
@@ -206,6 +216,8 @@ class _NodeWidgetState extends State<NodeWidget> {
   }
 
   Node get node => widget.node;
+
+  Set<Node> get selectedNodes => widget.selectedNodes;
 
   ProgramViewport get viewport => widget.viewport;
 }

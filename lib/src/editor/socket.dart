@@ -36,7 +36,7 @@ class SocketWidget extends StatefulWidget {
 
   static /*const*/ double spacingV = 5;
 
-  static /*const*/ double spacingH = 5;
+  static /*const*/ double spacingH = 2;
 }
 
 class _SocketWidgetState extends State<SocketWidget> {
@@ -77,13 +77,15 @@ class _SocketWidgetState extends State<SocketWidget> {
               left: socket.isInput
                   ? SocketWidget.size +
                         SocketWidget.spacingH +
-                        SocketWidget.spacingH
+                        SocketWidget.spacingH +
+                        10
                   : null,
               right: socket.isInput
                   ? null
                   : SocketWidget.size +
                         SocketWidget.spacingH +
-                        SocketWidget.spacingH,
+                        SocketWidget.spacingH +
+                        10,
               top: 0,
               child: _buildName(),
             ),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:turtle/src/app/app.dart';
 import 'package:turtle/src/editor/node.dart';
 import 'package:turtle/src/model/executer.dart';
 import 'package:turtle/src/model/model.dart';
@@ -12,8 +13,15 @@ import 'connection.dart';
 
 class ProgramEditor extends StatefulWidget {
   final Program program;
+  final Set<Node> selectedNodes;
+  final void Function(Set<Node>) onSelectionChange;
 
-  const ProgramEditor({required this.program, super.key});
+  const ProgramEditor({
+    required this.program,
+    required this.selectedNodes,
+    required this.onSelectionChange,
+    super.key,
+  });
 
   @override
   State<ProgramEditor> createState() => _ProgramEditorState();
@@ -22,14 +30,18 @@ class ProgramEditor extends StatefulWidget {
 class _ProgramEditorState extends State<ProgramEditor> {
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeInjector.of(context);
     return _registerMouseEvents(
       context: context,
       child: _registerKeyEvents(
         context: context,
         child: Container(
           decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 47, 47, 47),
+            color: theme.panelBackground,
+            border: theme.panelBorder,
+            borderRadius: theme.panelBorderRadius,
           ),
+          margin: EdgeInsets.symmetric(vertical: 2, horizontal: 2),
           child: Stack(
             children: [
               for (final connection in program.connections)
@@ -59,6 +71,20 @@ class _ProgramEditorState extends State<ProgramEditor> {
                   connectionDrag: _connectionDrag,
                   onConnectionDrag: _onConnectionDrag,
                   onPointer: _pointerStream,
+                  selectedNodes: selectedNodes,
+                  onSelect: (selected, shift) {
+                    if (shift) {
+                      if (selectedNodes.contains(selected)) {
+                        widget.onSelectionChange(
+                          selectedNodes..remove(selected),
+                        );
+                      } else {
+                        widget.onSelectionChange(selectedNodes..add(selected));
+                      }
+                    } else {
+                      widget.onSelectionChange({selected});
+                    }
+                  },
                 ),
             ],
           ),
@@ -80,16 +106,18 @@ class _ProgramEditorState extends State<ProgramEditor> {
             _connectionDrag!.event.pointer == event.pointer) {
           return;
         }
-        setState(() {
-          _nodeDrag = null;
-          _connectionDrag = null;
-          _panOffset = null;
-        });
         if (event.buttons == kMiddleMouseButton) {
           setState(() {
             _nodeDrag = null;
             _connectionDrag = null;
             _panOffset = event.localPosition;
+          });
+        } else if (event.buttons == kPrimaryMouseButton) {
+          setState(() {
+            _nodeDrag = null;
+            _connectionDrag = null;
+            _panOffset = null;
+            widget.onSelectionChange({});
           });
         }
       },
@@ -144,11 +172,11 @@ class _ProgramEditorState extends State<ProgramEditor> {
       onKeyEvent: (event) async {
         if (event is KeyDownEvent) {
           if (event.logicalKey == LogicalKeyboardKey.delete) {
-            if (_selectedNode != null) {
+            /* TODO if (_selectedNode != null) {
               program.removeNode(_selectedNode!);
               _selectedNode = null;
               setState(() {});
-            }
+            }*/
           } else if (event.logicalKey == LogicalKeyboardKey.f5) {
             final executer = Executer(program: program, frame: 0);
             try {
@@ -188,7 +216,7 @@ class _ProgramEditorState extends State<ProgramEditor> {
     scale: 1,
   );
 
-  String? _selectedNode;
+  Set<Node> get selectedNodes => widget.selectedNodes;
 
   Program get program => widget.program;
 
