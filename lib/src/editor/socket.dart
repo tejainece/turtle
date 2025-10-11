@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:turtle/src/app/app.dart';
 import 'package:turtle/src/editor/editor.dart';
 import 'package:turtle/src/model/model.dart';
 import 'package:turtle/src/model/program.dart';
@@ -29,22 +30,15 @@ class SocketWidget extends StatefulWidget {
 
   @override
   State<SocketWidget> createState() => _SocketWidgetState();
-
-  static /*const*/ double size = 10;
-
-  static /*const*/ double borderSize = 2;
-
-  static /*const*/ double spacingV = 5;
-
-  static /*const*/ double spacingH = 2;
 }
 
 class _SocketWidgetState extends State<SocketWidget> {
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeInjector.of(context);
     Widget content = SizedBox(
-      width: SocketWidget.size,
-      height: SocketWidget.size,
+      width: theme.node.socketSize,
+      height: theme.node.socketSize,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -55,8 +49,8 @@ class _SocketWidgetState extends State<SocketWidget> {
               behavior: HitTestBehavior.translucent,
               onPointerDown: _onPointerEvent,
               child: Container(
-                width: SocketWidget.size,
-                height: SocketWidget.size,
+                width: theme.node.socketSize,
+                height: theme.node.socketSize,
                 decoration: BoxDecoration(
                   color: _hovering != null
                       ? (_hovering!.message != null
@@ -65,9 +59,11 @@ class _SocketWidgetState extends State<SocketWidget> {
                       : null,
                   border: Border.all(
                     color: socket.dataType.col,
-                    width: SocketWidget.borderSize,
+                    width: theme.node.socketThickness,
                   ),
-                  borderRadius: BorderRadius.circular(SocketWidget.size / 2),
+                  borderRadius: BorderRadius.circular(
+                    theme.node.socketSize / 2,
+                  ),
                 ),
               ),
             ),
@@ -75,16 +71,16 @@ class _SocketWidgetState extends State<SocketWidget> {
           if (_hovering != null)
             Positioned(
               left: socket.isInput
-                  ? SocketWidget.size +
-                        SocketWidget.spacingH +
-                        SocketWidget.spacingH +
+                  ? theme.node.socketSize +
+                        theme.node.socketVerticalMargin +
+                        theme.node.socketVerticalMargin +
                         10
                   : null,
               right: socket.isInput
                   ? null
-                  : SocketWidget.size +
-                        SocketWidget.spacingH +
-                        SocketWidget.spacingH +
+                  : theme.node.socketSize +
+                        theme.node.socketVerticalMargin +
+                        theme.node.socketVerticalMargin +
                         10,
               top: 0,
               child: _buildName(),

@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:turtle/src/app/app.dart';
 import 'package:turtle/src/editor/editor.dart';
+import 'package:turtle/src/editor/box_resizer.dart';
 import 'package:turtle/src/editor/socket.dart';
 import 'package:turtle/src/model/model.dart';
 import 'package:turtle/src/model/program.dart';
@@ -28,6 +30,8 @@ class NodeWidget extends StatefulWidget {
 
   final void Function(Node onSelected, bool shift) onSelect;
 
+  final void Function(ResizeDir dir, PointerDownEvent event) onResizeStart;
+
   const NodeWidget({
     required this.program,
     required this.node,
@@ -39,6 +43,7 @@ class NodeWidget extends StatefulWidget {
     required this.onPointer,
     required this.selectedNodes,
     required this.onSelect,
+    required this.onResizeStart,
   });
 
   @override
@@ -47,6 +52,7 @@ class NodeWidget extends StatefulWidget {
 
 class _NodeWidgetState extends State<NodeWidget> {
   Widget _buildContent(BuildContext context) {
+    final theme = ThemeInjector.of(context);
     return Listener(
       onPointerDown: (event) {
         if (event.buttons == kPrimaryMouseButton) {
@@ -67,13 +73,10 @@ class _NodeWidgetState extends State<NodeWidget> {
         height: node.size.height,
         decoration: BoxDecoration(
           color: const Color.fromARGB(255, 0, 27, 45),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: selectedNodes.contains(node)
-                ? Colors.green
-                : const Color.fromARGB(255, 3, 38, 83),
-            width: 2,
-          ),
+          borderRadius: theme.node.borderRadius,
+          border: selectedNodes.contains(node)
+              ? theme.node.selectedBorder
+              : theme.node.border,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.35),
@@ -83,35 +86,33 @@ class _NodeWidgetState extends State<NodeWidget> {
             ),
           ],
         ),
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 5),
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 0, 46, 107),
-                borderRadius: /*BorderRadius.circular(10)*/ BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  topRight: Radius.circular(8),
+        child: BoxResizer(
+          onResizeStart: (dir, event) => widget.onResizeStart(dir, event),
+          child: Column(
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 5),
+                decoration: BoxDecoration(
+                  color: theme.node.titleBackground,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    topRight: Radius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  node.processor.label,
+                  softWrap: false,
+                  style: theme.node.titleTextStyle,
                 ),
               ),
-              child: Text(
-                node.processor.label,
-                softWrap: false,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  overflow: TextOverflow.fade,
-                ),
+              Expanded(
+                child: node.preview != null
+                    ? PreviewWidget(node.preview)
+                    : Container(),
               ),
-            ),
-            Expanded(
-              child: node.preview != null
-                  ? PreviewWidget(node.preview)
-                  : Container(),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -119,22 +120,23 @@ class _NodeWidgetState extends State<NodeWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeInjector.of(context);
     return Positioned(
       left: viewport.center.dx + node.offset.dx,
       top: viewport.center.dy + node.offset.dy,
       child: SizedBox(
         width:
-            SocketWidget.size +
-            SocketWidget.spacingH +
+            theme.node.socketSize +
+            theme.node.socketSpacing +
             node.size.width +
-            SocketWidget.spacingH +
-            SocketWidget.size,
+            theme.node.socketSpacing +
+            theme.node.socketSize,
         height: node.size.height,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
             Positioned(
-              left: SocketWidget.size + SocketWidget.spacingH,
+              left: theme.node.socketSize + theme.node.socketSpacing,
               top: 0,
               child: _buildContent(context),
             ),
@@ -142,7 +144,7 @@ class _NodeWidgetState extends State<NodeWidget> {
               left: 0,
               top: 0,
               child: Column(
-                spacing: SocketWidget.spacingV,
+                spacing: theme.node.socketVerticalMargin,
                 children: [
                   SizedBox(height: 25),
                   for (final input in node.inputSockets.indexed)
@@ -161,13 +163,13 @@ class _NodeWidgetState extends State<NodeWidget> {
             ),
             Positioned(
               left:
-                  SocketWidget.size +
-                  SocketWidget.spacingH +
+                  theme.node.socketSize +
+                  theme.node.socketSpacing +
                   node.size.width +
-                  SocketWidget.spacingH,
+                  theme.node.socketSpacing,
               top: 0,
               child: Column(
-                spacing: SocketWidget.spacingV,
+                spacing: theme.node.socketVerticalMargin,
                 children: [
                   SizedBox(height: 25),
                   for (final output in node.outputSockets.indexed)

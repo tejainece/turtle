@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
+import 'package:turtle/src/app/app.dart';
 import 'package:turtle/src/processor/processor.dart';
 
 class Node {
@@ -51,7 +52,7 @@ class Node {
   List<ProcessorSocket> get inputSockets => processor.inputSockets;
   List<ProcessorSocket> get outputSockets => processor.outputSockets;
 
-  ProcessorSocket? findSocket(String key) {
+  ProcessorSocket? findSocketByKey(String key) {
     for (final socket in inputSockets) {
       if (socket.key != key) continue;
       return socket;
@@ -73,6 +74,47 @@ class Node {
   dynamic getProperty(String socketId) {
     // TODO check that socket is input
     return _properties[socketId];
+  }
+
+  ({ProcessorSocket socket, Offset offset})? getSocketOffset(
+    String socKey,
+    NodeTheme theme,
+  ) {
+    for (final input in inputSockets.indexed) {
+      if (input.$2.key != socKey) continue;
+      return (
+        socket: input.$2,
+        offset:
+            offset +
+            Offset(
+              theme.socketSize / 2,
+              25 +
+                  theme.socketVerticalMargin +
+                  theme.socketSize / 2 +
+                  input.$1 * (theme.socketSize + 5),
+            ),
+      );
+    }
+    for (final output in outputSockets.indexed) {
+      if (output.$2.key != socKey) continue;
+      return (
+        socket: output.$2,
+        offset:
+            offset +
+            Offset(
+              theme.socketSize +
+                  theme.socketSpacing +
+                  size.width +
+                  theme.socketSpacing +
+                  theme.socketSize / 2,
+              25 +
+                  theme.socketVerticalMargin +
+                  theme.socketSize / 2 +
+                  output.$1 * (theme.socketSize + 5),
+            ),
+      );
+    }
+    return null;
   }
 
   Future<void> dispose() async {

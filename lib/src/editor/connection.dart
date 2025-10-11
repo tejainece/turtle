@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_color/flutter_color.dart';
+import 'package:turtle/src/app/app.dart';
 import 'package:turtle/src/editor/editor.dart';
 import 'package:turtle/src/model/model.dart';
 import 'package:turtle/src/model/program.dart';
@@ -26,17 +27,19 @@ class ConnectionWidget extends StatefulWidget {
   State<ConnectionWidget> createState() => _ConnectionWidgetState();
 }
 
-class _ConnectionWidgetState extends State<ConnectionWidget> {
+class _ConnectionWidgetState extends State<ConnectionWidget> with AfterInit {
   @override
   Widget build(BuildContext context) {
-    if (start == null || end == null || path == null) return Container();
+    if (start == null || end == null || path == null || color == null) {
+      return Container();
+    }
     return Positioned.fill(
       child: CustomPaint(
         painter: ConnectionPainter(
           start: start!,
           end: end!,
           path: path!,
-          color: program.getSocketDataType(connection.socketA)!.col,
+          color: color!,
           isHovering: _hovering,
         ),
       ),
@@ -69,16 +72,22 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
     });
   }
 
+  late final MyTheme theme;
+
   @override
-  void initState() {
-    super.initState();
+  void afterInit() {
+    theme = ThemeInjector.of(context);
     _update();
     final nodes = program.getConnectionNodes(
       connection.socketA,
       connection.socketB,
     )!;
 
-    _subs.add(viewport.stream.listen((e) => _update()));
+    _subs.add(
+      viewport.stream.listen((e) {
+        _update();
+      }),
+    );
     _subs.add(nodes.$1.stream.listen((e) => _update()));
     _subs.add(nodes.$2.stream.listen((e) => _update()));
 
@@ -99,14 +108,28 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
 
   Path? path;
   Offset? start, end;
+  Color? color;
 
   void _update() {
-    start = viewport.center + program.getConnectionOffset(connection.socketA)!;
-    end = viewport.center + program.getConnectionOffset(connection.socketB)!;
+    final connectionData = program.getConnectionData(connection, theme);
+    if (connectionData == null) {
+      setState(() {
+        path = null;
+        start = null;
+        end = null;
+        color = null;
+      });
+      return;
+    }
+
+    color = connectionData.dataType.col;
+    start = viewport.center + connectionData.socketAOffset;
+    end = viewport.center + connectionData.socketBOffset;
     path = Path();
 
     path!.moveTo(start!.dx, start!.dy);
     path!.lineTo(end!.dx, end!.dy);
+    setState(() {});
   }
 
   ProgramViewport get viewport => widget.viewport;
@@ -132,7 +155,8 @@ class ConnectionDragWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final start = viewport.center + program.getConnectionOffset(socket)!;
+    final theme = ThemeInjector.of(context);
+    final start = viewport.center + program.getConnectionOffset(socket, theme)!;
     final end = current;
 
     final Path path = Path();
@@ -234,4 +258,21 @@ class ConnectionPainter extends CustomPainter {
   }
 
   static /* const */ double defaultStrokeWidth = 2.0;
+}
+
+mixin AfterInit {
+  bool _onlyOnce = false;
+
+  void didChangeDependencies() {
+    triggerAfterInit();
+  }
+
+  void triggerAfterInit() {
+    if (_onlyOnce) return;
+
+    afterInit();
+    _onlyOnce = true;
+  }
+
+  void afterInit();
 }

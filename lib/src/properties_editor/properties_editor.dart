@@ -103,8 +103,36 @@ class PropertyEditor extends StatefulWidget {
 class _PropertyEditorState extends State<PropertyEditor> {
   @override
   Widget build(BuildContext context) {
+    if (socket.dataType == DataType.boolean) {
+      return Container(
+        child: Checkbox(
+          value: node.getProperty(socket.id),
+          onChanged: (value) {
+            node.setProperty(socket.id, value);
+          },
+        ),
+      );
+    } else if (socket.dataType == DataType.number) {
+      return Container(
+        child: TextField(
+          keyboardType: TextInputType.number,
+          controller: _controller,
+          decoration: InputDecoration(labelText: socket.label),
+          onChanged: (value) {
+            node.setProperty(socket.id, double.tryParse(value));
+          },
+        ),
+      );
+    }
     return Container();
   }
+
+  void initState() {
+    super.initState();
+    _controller.text = node.getProperty(socket.id).toString();
+  }
+
+  final _controller = TextEditingController();
 
   Program get program => widget.program;
   Node get node => widget.node;

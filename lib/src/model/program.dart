@@ -1,38 +1,71 @@
+import 'dart:async';
+import 'dart:collection';
+
+import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
-import 'package:turtle/src/editor/socket.dart';
+import 'package:turtle/src/app/app.dart';
 import 'package:turtle/src/model/model.dart';
 import 'package:turtle/src/processor/processor.dart';
 
 class Program {
-  final List<Node> nodes;
-  final List<Connection> connections;
+  final List<Node> _nodes = [];
+  final List<Connection> _connections = [];
 
-  Program({required this.nodes, required this.connections});
+  final _controller = StreamController<Program>.broadcast();
+  late final Stream<Program> stream = _controller.stream;
 
-  void removeNode(String id) {
+  Program({required List<Node> nodes, required List<Connection> connections}) {
     for (final node in nodes) {
-      if (node.id != id) continue;
+      addNode(node);
+    }
+    for (final connection in connections) {
+      _connect(
+        connection.socketA,
+        connection.socketB,
+        shape: connection.shape,
+        skipEvent: true,
+      );
+    }
+  }
 
-      nodes.remove(node);
-      for (final input in node.inputSockets) {
-        removeConnection('${node.id}.${input.key}');
-      }
-      for (final output in node.outputSockets) {
-        removeConnection('${node.id}.${output.key}');
-      }
+  late final nodes = UnmodifiableListView(_nodes);
+  late final connections = UnmodifiableListView(_connections);
+
+  void addNode(Node node) {
+    // TODO check that it is not already present
+    _nodes.add(node);
+    _controller.add(this);
+  }
+
+  void removeNode(Node node) {
+    _nodes.remove(node);
+    for (final input in node.inputSockets) {
+      _removeConnection('${node.id}.${input.key}', skipEvent: true);
+    }
+    for (final output in node.outputSockets) {
+      _removeConnection('${node.id}.${output.key}', skipEvent: true);
+    }
+    _controller.add(this);
+  }
+
+  void removeNodeById(String id) {
+    for (final node in _nodes) {
+      if (node.id != id) continue;
+      removeNode(node);
       break;
     }
   }
 
   void removeConnection(String socketId) {
-    for (final connection in connections) {
-      if (connection.socketB != socketId && connection.socketA != socketId) {
-        continue;
-      }
+    _removeConnection(socketId);
+  }
 
-      connections.remove(connection);
-      break;
-    }
+  void _removeConnection(String socketId, {bool skipEvent = false}) {
+    _connections.removeWhere(
+      (connection) =>
+          connection.socketB == socketId || connection.socketA == socketId,
+    );
+    if (!skipEvent) _controller.add(this);
   }
 
   String? canConnect(String socketAId, String socketBId) {
@@ -46,12 +79,12 @@ class Program {
     Node? nodeB = findNodeById(nodeIdB);
     if (nodeB == null) return 'Socket $socketBId is not found in program';
 
-    String socketAKey = socketAId.split('.').last;
-    String socketBKey = socketBId.split('.').last;
+    String socketAKey = socketAId.split('.').skip(1).join('.');
+    String socketBKey = socketBId.split('.').skip(1).join('.');
 
-    ProcessorSocket? socketA = nodeA.findSocket(socketAKey);
+    ProcessorSocket? socketA = nodeA.findSocketByKey(socketAKey);
     if (socketA == null) return 'Socket $socketAId is not found in program';
-    ProcessorSocket? socketB = nodeB.findSocket(socketBKey);
+    ProcessorSocket? socketB = nodeB.findSocketByKey(socketBKey);
     if (socketB == null) return 'Socket $socketBId is not found in program';
 
     if (socketA.isInput && socketB.isInput) {
@@ -67,9 +100,17 @@ class Program {
     return null;
   }
 
-  String? connect(String socketAId, String socketBId, {List<Offset>? shape}) {
+  String? connect(String socketAId, String socketBId, {List<Offset>? shape}) =>
+      _connect(socketAId, socketBId, shape: shape);
+
+  String? _connect(
+    String socketAId,
+    String socketBId, {
+    List<Offset>? shape,
+    bool skipEvent = false,
+  }) {
     // Do not add, if already present
-    for (final connection in connections) {
+    for (final connection in _connections) {
       if (connection.socketA == socketAId && connection.socketB == socketBId) {
         return null;
       }
@@ -77,15 +118,18 @@ class Program {
 
     final err = canConnect(socketAId, socketBId);
     if (err != null) return err;
-    connections.add(
+    _connections.add(
       Connection(socketA: socketAId, socketB: socketBId, shape: shape ?? []),
     );
+    if (!skipEvent) {
+      _controller.add(this);
+    }
 
     return null;
   }
 
   Node? findNodeById(String id) {
-    for (final node in nodes) {
+    for (final node in _nodes) {
       if (node.id != id) continue;
       return node;
     }
@@ -109,39 +153,12 @@ class Program {
     return null;
   }
 
-  Offset? getConnectionOffset(String socketId) {
+  Offset? getConnectionOffset(String socketId, MyTheme theme) {
     final nodeId = socketId.split('.').first;
     final node = findNodeById(nodeId);
     if (node == null) return null;
-    final socId = socketId.split('.').skip(1).join('.');
-
-    for (final input in node.inputSockets.indexed) {
-      if (input.$2.key != socId) continue;
-      return node.offset +
-          Offset(
-            SocketWidget.size / 2,
-            25 +
-                SocketWidget.spacingV +
-                SocketWidget.size / 2 +
-                input.$1 * (SocketWidget.size + 5),
-          );
-    }
-    for (final output in node.outputSockets.indexed) {
-      if (output.$2.key != socId) continue;
-      return node.offset +
-          Offset(
-            SocketWidget.size +
-                SocketWidget.spacingH +
-                node.size.width +
-                SocketWidget.spacingH +
-                SocketWidget.size / 2,
-            25 +
-                SocketWidget.spacingV +
-                SocketWidget.size / 2 +
-                output.$1 * (SocketWidget.size + 5),
-          );
-    }
-    return null;
+    final socKey = socketId.split('.').skip(1).join('.');
+    return node.getSocketOffset(socKey, theme.node)?.offset;
   }
 
   (Node, Node)? getConnectionNodes(String socketAId, String socketBId) {
@@ -156,7 +173,7 @@ class Program {
   }
 
   Connection? getConnectionBySocket(String socketId) {
-    for (final connection in connections) {
+    for (final connection in _connections) {
       if (connection.socketA == socketId || connection.socketB == socketId) {
         return connection;
       }
@@ -177,9 +194,37 @@ class Program {
     return (connection, mySocketId, node);
   }
 
+  ConnectionMeta? getConnectionData(Connection connection, MyTheme theme) {
+    final nodeA = findNodeById(connection.socketA.split('.').first);
+    if (nodeA == null) return null;
+    final nodeB = findNodeById(connection.socketB.split('.').first);
+    if (nodeB == null) return null;
+
+    final socketAKey = connection.socketA.split('.').skip(1).join('.');
+    final socketBKey = connection.socketB.split('.').skip(1).join('.');
+
+    final offsetA = nodeA.getSocketOffset(socketAKey, theme.node);
+    if (offsetA == null) return null;
+    final offsetB = nodeB.getSocketOffset(socketBKey, theme.node);
+    if (offsetB == null) return null;
+
+    return ConnectionMeta(
+      dataType: offsetA.socket.dataType,
+      socketAOffset: offsetA.offset,
+      socketBOffset: offsetB.offset,
+    );
+  }
+
+  Future<void> dispose() async {
+    await _controller.close();
+    for (final node in _nodes) {
+      await node.dispose();
+    }
+  }
+
   Map<String, dynamic> toJson() => {
-    'nodes': nodes.map((e) => e.toJson()).toList(),
-    'connections': connections.map((e) => e.toJson()).toList(),
+    'nodes': _nodes.map((e) => e.toJson()).toList(),
+    'connections': _connections.map((e) => e.toJson()).toList(),
   };
 
   static Program fromJson(Map json, Map<String, Processor> processors) =>
@@ -187,4 +232,15 @@ class Program {
         nodes: Node.fromJsonList(json['nodes'], processors),
         connections: Connection.fromJsonList(json['connections']),
       );
+}
+
+class ConnectionMeta {
+  final DataType dataType;
+  final Offset socketAOffset;
+  final Offset socketBOffset;
+  ConnectionMeta({
+    required this.dataType,
+    required this.socketAOffset,
+    required this.socketBOffset,
+  });
 }

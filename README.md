@@ -17,6 +17,7 @@ Procedural art and animation library for Dart
 
 # Roadmap: Editor
 
++ 
 + Detect cycles
 + Hover scroll
 + Add nodes
@@ -30,3 +31,7 @@ Procedural art and animation library for Dart
 # Preview
 
 # Animation
+
+# Executer
+
++ Feedback loops
