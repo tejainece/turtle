@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:turtle/src/app/app.dart';
+import 'package:turtle/src/app/theme.dart';
 import 'package:turtle/src/editor/node.dart';
 import 'package:turtle/src/editor/box_resizer.dart';
 import 'package:turtle/src/model/executer.dart';
@@ -32,8 +33,6 @@ class _ProgramEditorState extends State<ProgramEditor> {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeInjector.of(context);
-
-    print(program.connections);
 
     final content = Container(
       decoration: BoxDecoration(
@@ -361,7 +360,6 @@ class _ProgramEditorState extends State<ProgramEditor> {
     _focus.requestFocus();
     _subs.add(
       program.stream.listen((event) {
-        print('refreshing');
         setState(() {});
       }),
     );

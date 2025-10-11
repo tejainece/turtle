@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:turtle/src/app/app.dart';
+import 'package:turtle/src/app/theme.dart';
 import 'package:turtle/src/editor/editor.dart';
 import 'package:turtle/src/model/model.dart';
 import 'package:turtle/src/model/program.dart';

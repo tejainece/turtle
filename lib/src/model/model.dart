@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:turtle/src/app/app.dart';
+import 'package:turtle/src/app/theme.dart';
 import 'package:turtle/src/processor/processor.dart';
 
 class Node {
@@ -37,6 +38,12 @@ class Node {
   Size get size => _size;
 
   set size(Size value) {
+    if (value.width < 30) {
+      value = Size(30, value.height);
+    }
+    if (value.height < 30) {
+      value = Size(value.width, 30);
+    }
     if (value == _size) return;
     _size = value;
     _controller.add(this);

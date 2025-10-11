@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_color/flutter_color.dart';
 import 'package:turtle/src/app/app.dart';
+import 'package:turtle/src/app/theme.dart';
 import 'package:turtle/src/editor/editor.dart';
 import 'package:turtle/src/model/model.dart';
 import 'package:turtle/src/model/program.dart';
